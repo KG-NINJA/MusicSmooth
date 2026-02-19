@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Mouse Style MIDI Generator - Final Fix</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/tone@14.7.58"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1/es6/core.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/focus-visible@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-midi-player@1.5.0"></script>
+    
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1e1e1e;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 { margin-bottom: 5px; }
+        p { color: #aaa; margin-bottom: 20px; text-align: center; font-size: 14px; line-height: 1.5; }
+        
+        canvas {
+            background: linear-gradient(to right, #2a2a2a 1px, transparent 1px),
+                        linear-gradient(to bottom, #2a2a2a 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-color: #111;
+            border: 2px solid #555;
+            border-radius: 8px;
+            cursor: crosshair;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            touch-action: none;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        #status {
+            color: #00ffcc;
+            font-weight: bold;
+            height: 24px;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background-color: #00ffcc;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            display: none;
+        }
+        .btn:hover { background-color: #00ccaa; }
+
+        midi-player {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Music Mouse Gen</h1>
+    <p>キャンバスをドラッグして図形を描きます。<br>マウスを離すとMIDIが生成され、プレイヤーが準備されます。</p>
+
+    <div id="status">準備完了：ドラッグして描画を開始してください</div>
+
+    <canvas id="xy-pad" width="400" height="400"></canvas>
+
+    <div class="controls">
+        <midi-player id="midi-player" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+        <a id="download-btn" class="btn" download="music_mouse_gen.mid">生成したMIDIをダウンロード</a>
+    </div>
+
+    <script type="module">
+        // esm.sh を使ってmidi-writer-jsをモジュールとして確実に読み込む
+        import MidiWriter from 'https://esm.sh/midi-writer-js@2.1.4';
+
+        const scale = ['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'B3', 
+                       'C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 
+                       'C5', 'D5', 'E5', 'F5', 'G5', 'A5', 'B5', 'C6'];
+        
+        const canvas = document.getElementById('xy-pad');
+        const ctx = canvas.getContext('2d');
+        const statusEl = document.getElementById('status');
+        const player = document.getElementById('midi-player');
+        const downloadBtn = document.getElementById('download-btn');
+
+        let isRecording = false;
+        let recordInterval;
+        let recordedEvents = [];
+        let currentX = 0;
+        let currentY = 0;
+
+        ctx.strokeStyle = '#00ffcc';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        function getNotesFromPosition(x, y) {
+            const xIndex = Math.floor((x / canvas.width) * scale.length);
+            const yIndex = Math.floor(((canvas.height - y) / canvas.height) * scale.length);
+
+            const safeX = Math.max(0, Math.min(xIndex, scale.length - 1));
+            const safeY = Math.max(0, Math.min(yIndex, scale.length - 1));
+
+            const voice1 = scale[safeX];
+            const voice2 = scale[Math.min(safeX + 2, scale.length - 1)]; 
+            const voice3 = scale[safeY];
+            const voice4 = scale[Math.max(safeY - 4, 0)];
+
+            return [...new Set([voice1, voice2, voice3, voice4])];
+        }
+
+        function recordStep() {
+            const notes = getNotesFromPosition(currentX, currentY);
+            recordedEvents.push(notes);
+        }
+
+        function generateMIDI() {
+            if (recordedEvents.length === 0) return;
+
+            statusEl.innerText = "⏳ プレイヤーを準備中...（ボタンが青くなるまで数秒お待ちください）";
+
+            const track = new MidiWriter.Track();
+            track.addEvent(new MidiWriter.ProgramChangeEvent({instrument: 1})); 
+
+            recordedEvents.forEach(notes => {
+                track.addEvent(new MidiWriter.NoteEvent({pitch: notes, duration: '16'}));
+            });
+
+            const write = new MidiWriter.Writer(track);
+            const base64Midi = write.base64();
+            
+            const byteCharacters = atob(base64Midi);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], {type: 'audio/midi'});
+            const blobUrl = URL.createObjectURL(blob);
+
+            player.src = blobUrl;
+            downloadBtn.href = blobUrl;
+            downloadBtn.style.display = 'block';
+
+            // 読み込み完了後に状態を更新
+            player.addEventListener('load', () => {
+                statusEl.innerText = "✅ 準備完了！▶ボタンで再生できます";
+            }, { once: true });
+        }
+
+        async function startDrawing(e) {
+            // 【重要】キャンバスを触った瞬間にAudioContextを起動し、ブラウザの警告を消す
+            if (window.Tone && Tone.context.state !== 'running') {
+                await Tone.start();
+            }
+
+            isRecording = true;
+            recordedEvents = [];
+            statusEl.innerText = "⏺ 録音＆描画中...";
+            
+            const rect = canvas.getBoundingClientRect();
+            currentX = (e.clientX || e.touches[0].clientX) - rect.left;
+            currentY = (e.clientY || e.touches[0].clientY) - rect.top;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.moveTo(currentX, currentY);
+
+            recordStep(); 
+            recordInterval = setInterval(recordStep, 150);
+        }
+
+        function draw(e) {
+            if (!isRecording) return;
+            const rect = canvas.getBoundingClientRect();
+            currentX = (e.clientX || e.touches[0].clientX) - rect.left;
+            currentY = (e.clientY || e.touches[0].clientY) - rect.top;
+
+            ctx.lineTo(currentX, currentY);
+            ctx.stroke();
+        }
+
+        function stopDrawing() {
+            if (isRecording) {
+                isRecording = false;
+                clearInterval(recordInterval);
+                generateMIDI();
+            }
+        }
+
+        // イベントリスナーの登録
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        window.addEventListener('mouseup', stopDrawing);
+
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); });
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+        window.addEventListener('touchend', stopDrawing);
+    </script>
+</body>
+</html>
