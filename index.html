@@ -224,6 +224,8 @@
                     <option value="pentatonic">Pentatonic (ペンタトニック)</option>
                     <option value="ryukyu">Ryukyu (琉球音階)</option>
                     <option value="chromatic">Chromatic (半音階)</option>
+                    <option value="slendro">Gamelan Slendro (スレンドロ)</option>
+                    <option value="pelog">Gamelan Pelog (ペロッグ)</option>
                 </select>
             </div>
 
@@ -270,7 +272,9 @@
             minor: ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'Bb'],
             pentatonic: ['C', 'D', 'E', 'G', 'A'],
             ryukyu: ['C', 'E', 'F', 'G', 'B'],
-            chromatic: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+            chromatic: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+            slendro: ['C', 'D', 'F', 'G', 'Bb'],
+            pelog: ['C', 'Db', 'Eb', 'G', 'Ab']
         };
 
         const canvas = document.getElementById('xy-pad');
@@ -354,18 +358,20 @@
                 fullEvents.push({ melody: [], counter: [], bass: recordedEvents[recordedEvents.length - 1]?.bass || [] });
             }
 
+            const isGamelan = scaleSelect.value === 'slendro' || scaleSelect.value === 'pelog';
+
             // Track 1: Melody
             const melodyTrack = new MidiWriter.Track();
             melodyTrack.setTempo(bpm);
-            melodyTrack.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 1 }));
+            melodyTrack.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: isGamelan ? 13 : 1 })); // Marimba or Piano
 
-            // Track 2: Counter-Melody (Strings)
+            // Track 2: Counter-Melody (Strings or Music Box)
             const counterTrack = new MidiWriter.Track();
-            counterTrack.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 49 }));
+            counterTrack.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: isGamelan ? 11 : 49 })); // Music Box or Strings
 
-            // Track 3: Bass
+            // Track 3: Bass (Bass or Kalimba)
             const bassTrack = new MidiWriter.Track();
-            bassTrack.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 33 })); // Acoustic Bass
+            bassTrack.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: isGamelan ? 109 : 33 })); // Kalimba or Bass
 
             // Track 4: Rhythm (Drums on Channel 10)
             const rhythmTrack = new MidiWriter.Track();
@@ -396,9 +402,17 @@
                 const drumNotes = [];
                 const stepInBar = index % 16;
 
-                if (stepInBar % 4 === 0) drumNotes.push('C2'); // Kick
-                if (stepInBar === 4 || stepInBar === 12) drumNotes.push('D2'); // Snare
-                if (index % 2 === 0) drumNotes.push('F#2'); // Closed Hi-hat
+                if (isGamelan) {
+                    // Gamelan Cyclic Rhythm
+                    if (stepInBar === 0) drumNotes.push('C2'); // Big Gong (Kick)
+                    if (stepInBar === 8) drumNotes.push('D2'); // Mid Gong (Snare)
+                    if (index % 4 === 2) drumNotes.push('F#2'); // Small Percussion (Hi-hat)
+                } else {
+                    // Standard Rhythm
+                    if (stepInBar % 4 === 0) drumNotes.push('C2'); // Kick
+                    if (stepInBar === 4 || stepInBar === 12) drumNotes.push('D2'); // Snare
+                    if (index % 2 === 0) drumNotes.push('F#2'); // Closed Hi-hat
+                }
 
                 if (drumNotes.length > 0) {
                     rhythmTrack.addEvent(new MidiWriter.NoteEvent({
@@ -432,7 +446,8 @@
             downloadBtn.style.display = 'flex';
 
             player.addEventListener('load', () => {
-                statusEl.innerText = "✅ Generated with Rhythm, Strings & Bass! Press Play.";
+                const modeMsg = isGamelan ? "Gamelan Mode" : "Standard Mode";
+                statusEl.innerText = `✅ Generated in ${modeMsg}! Press Play.`;
             }, { once: true });
         }
 
