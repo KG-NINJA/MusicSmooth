@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Music Moose - Advanced MIDI Generator</title>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/tone@14.7.58"></script>
     <script src="https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1/es6/core.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/focus-visible@5"></script>
     <script src="https://cdn.jsdelivr.net/npm/html-midi-player@1.5.0"></script>
-    
+
     <style>
         :root {
             --primary-color: #007BFF;
@@ -23,7 +24,7 @@
         body {
             font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
             background-color: var(--bg-dark);
-            background-image: 
+            background-image:
                 radial-gradient(at 0% 0%, rgba(0, 123, 255, 0.15) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(0, 123, 255, 0.1) 0px, transparent 50%);
             color: var(--text-main);
@@ -35,8 +36,8 @@
             min-height: 100vh;
         }
 
-        h1 { 
-            margin-bottom: 10px; 
+        h1 {
+            margin-bottom: 10px;
             font-size: 2.5rem;
             background: linear-gradient(135deg, #fff 0%, var(--primary-color) 100%);
             -webkit-background-clip: text;
@@ -44,16 +45,16 @@
             font-weight: 800;
             letter-spacing: -0.02em;
         }
-        
-        p { 
-            color: var(--text-muted); 
-            margin-bottom: 30px; 
-            text-align: center; 
-            font-size: 0.95rem; 
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 0.95rem;
             line-height: 1.6;
             max-width: 500px;
         }
-        
+
         .container {
             display: flex;
             flex-direction: column;
@@ -74,9 +75,9 @@
         }
 
         canvas {
-            background: 
-                linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background:
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
             background-size: 40px 40px;
             background-color: #000;
             border-radius: 12px;
@@ -95,7 +96,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         .control-group {
@@ -112,7 +113,8 @@
             color: var(--text-muted);
         }
 
-        select, input[type="range"] {
+        select,
+        input[type="range"] {
             width: 100%;
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -198,6 +200,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="container">
@@ -232,18 +235,29 @@
             <div class="control-group" style="justify-content: flex-end;">
                 <div class="actions">
                     <button id="clear-btn" class="btn btn-secondary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        </svg>
                         キャンバスをクリア
                     </button>
                     <a id="download-btn" class="btn btn-primary" download="my_melody.mid">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
                         MIDIを保存
                     </a>
                 </div>
             </div>
 
             <div class="control-group" style="grid-column: 1 / -1;">
-                <midi-player id="midi-player" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+                <midi-player id="midi-player"
+                    sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
             </div>
         </div>
     </div>
@@ -297,49 +311,120 @@
         }
 
         function getNotesFromPosition(x, y) {
-            const xIndex = Math.floor((x / canvas.width) * activeScale.length);
-            const yIndex = Math.floor(((canvas.height - y) / canvas.height) * activeScale.length);
+            const xRatio = x / canvas.width;
+            const yRatio = (canvas.height - y) / canvas.height;
 
-            const safeX = Math.max(0, Math.min(xIndex, activeScale.length - 1));
-            const safeY = Math.max(0, Math.min(yIndex, activeScale.length - 1));
+            // X determines the base note index
+            const baseIndex = Math.floor(xRatio * (activeScale.length - 1));
+            const safeBase = Math.max(0, Math.min(baseIndex, activeScale.length - 1));
 
-            // Generate interesting harmonies based on X and Y
-            const v1 = activeScale[safeX];
-            const v2 = activeScale[Math.min(safeX + 2, activeScale.length - 1)]; 
-            const v3 = activeScale[safeY];
-            
-            return [...new Set([v1, v2, v3])];
+            const notes = [activeScale[safeBase]];
+
+            // Y determines chord density (add 3rd, 5th, 7th from scale if Y is high)
+            if (yRatio > 0.4 && safeBase + 2 < activeScale.length) {
+                notes.push(activeScale[safeBase + 2]);
+            }
+            if (yRatio > 0.7 && safeBase + 4 < activeScale.length) {
+                notes.push(activeScale[safeBase + 4]);
+            }
+
+            return {
+                melody: notes,
+                counter: safeBase >= 4 ? [activeScale[safeBase - 4]] : [activeScale[Math.max(0, safeBase - 2)]],
+                bass: [activeScale[safeBase].replace(/[0-9]/g, '') + '2']
+            };
         }
 
         function recordStep() {
-            const notes = getNotesFromPosition(currentX, currentY);
-            recordedEvents.push(notes);
+            const stepData = getNotesFromPosition(currentX, currentY);
+            recordedEvents.push(stepData);
         }
 
         function generateMIDI() {
             if (recordedEvents.length === 0) return;
 
-            statusEl.innerText = "⏳ Processing MIDI...";
+            statusEl.innerText = "⏳ Processing MIDI tracks...";
 
-            const track = new MidiWriter.Track();
-            // Set tempo based on slider
-            track.setTempo(parseInt(bpmSlider.value));
-            track.addEvent(new MidiWriter.ProgramChangeEvent({instrument: 1})); 
+            const bpm = parseInt(bpmSlider.value);
 
-            recordedEvents.forEach(notes => {
-                track.addEvent(new MidiWriter.NoteEvent({pitch: notes, duration: '16'}));
+            // 曲の終わりをキリよくするために、1小節（16ステップ）単位でパディング
+            const totalSteps = Math.ceil(recordedEvents.length / 16) * 16;
+            const fullEvents = [...recordedEvents];
+            while (fullEvents.length < totalSteps) {
+                fullEvents.push({ melody: [], counter: [], bass: recordedEvents[recordedEvents.length - 1]?.bass || [] });
+            }
+
+            // Track 1: Melody
+            const melodyTrack = new MidiWriter.Track();
+            melodyTrack.setTempo(bpm);
+            melodyTrack.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 1 }));
+
+            // Track 2: Counter-Melody (Strings)
+            const counterTrack = new MidiWriter.Track();
+            counterTrack.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 49 }));
+
+            // Track 3: Bass
+            const bassTrack = new MidiWriter.Track();
+            bassTrack.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 33 })); // Acoustic Bass
+
+            // Track 4: Rhythm (Drums on Channel 10)
+            const rhythmTrack = new MidiWriter.Track();
+
+            fullEvents.forEach((step, index) => {
+                // Add Melody (16th notes)
+                if (step.melody.length > 0) {
+                    melodyTrack.addEvent(new MidiWriter.NoteEvent({ pitch: step.melody, duration: '16' }));
+                } else {
+                    melodyTrack.addEvent(new MidiWriter.NoteEvent({ pitch: [], duration: '16', wait: '16' }));
+                }
+
+                // Add Counter-Melody (every 8th note)
+                if (index % 2 === 0) {
+                    if (step.counter.length > 0) {
+                        counterTrack.addEvent(new MidiWriter.NoteEvent({ pitch: step.counter, duration: '8' }));
+                    } else {
+                        counterTrack.addEvent(new MidiWriter.NoteEvent({ pitch: [], duration: '8', wait: '8' }));
+                    }
+                }
+
+                // Add Bass (every 4th note / beat)
+                if (index % 4 === 0) {
+                    bassTrack.addEvent(new MidiWriter.NoteEvent({ pitch: step.bass, duration: '4' }));
+                }
+
+                // Add Rhythm Pattern (16th notes)
+                const drumNotes = [];
+                const stepInBar = index % 16;
+
+                if (stepInBar % 4 === 0) drumNotes.push('C2'); // Kick
+                if (stepInBar === 4 || stepInBar === 12) drumNotes.push('D2'); // Snare
+                if (index % 2 === 0) drumNotes.push('F#2'); // Closed Hi-hat
+
+                if (drumNotes.length > 0) {
+                    rhythmTrack.addEvent(new MidiWriter.NoteEvent({
+                        pitch: drumNotes,
+                        duration: '16',
+                        channel: 10
+                    }));
+                } else {
+                    rhythmTrack.addEvent(new MidiWriter.NoteEvent({
+                        pitch: [],
+                        duration: '16',
+                        wait: '16'
+                    }));
+                }
             });
 
-            const write = new MidiWriter.Writer(track);
-            const base64Midi = write.base64();
-            
+            const writer = new MidiWriter.Writer([melodyTrack, counterTrack, bassTrack, rhythmTrack]);
+            const base64Midi = writer.base64();
+
             const byteCharacters = atob(base64Midi);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) {
                 byteNumbers[i] = byteCharacters.charCodeAt(i);
             }
             const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], {type: 'audio/midi'});
+            const blob = new Blob([byteArray], { type: 'audio/midi' });
             const blobUrl = URL.createObjectURL(blob);
 
             player.src = blobUrl;
@@ -347,7 +432,7 @@
             downloadBtn.style.display = 'flex';
 
             player.addEventListener('load', () => {
-                statusEl.innerText = "✅ Generated! Press Play to listen.";
+                statusEl.innerText = "✅ Generated with Rhythm, Strings & Bass! Press Play.";
             }, { once: true });
         }
 
@@ -359,7 +444,7 @@
             isRecording = true;
             recordedEvents = [];
             statusEl.innerText = "⏺ Recording & Drawing...";
-            
+
             const rect = canvas.getBoundingClientRect();
             currentX = ((e.clientX || e.touches?.[0]?.clientX) - rect.left) * (canvas.width / rect.width);
             currentY = ((e.clientY || e.touches?.[0]?.clientY) - rect.top) * (canvas.height / rect.height);
@@ -368,7 +453,7 @@
             ctx.beginPath();
             ctx.moveTo(currentX, currentY);
 
-            recordStep(); 
+            recordStep();
             // Calculate interval from BPM (16th notes)
             // 60000ms / (BPM * 4)
             const interval = 60000 / (parseInt(bpmSlider.value) * 4);
@@ -420,4 +505,5 @@
         updateScale();
     </script>
 </body>
+
 </html>
